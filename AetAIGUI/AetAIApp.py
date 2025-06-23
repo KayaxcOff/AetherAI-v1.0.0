@@ -9,7 +9,30 @@ import psutil
 import sys
 import json
 import os
+"""
+import joblib
+import numpy as np
 
+class AetherAI():
+    def __init__(self):
+        self.cpu = psutil.cpu_percent(interval=1)
+        self.memory = psutil.virtual_memory().percent
+        self.aet_model = joblib.load("AetherModel/Model/aether_ai.pkl")
+
+    def predict(self, cpu_data, memory_data):
+        self.data = np.array([[cpu_data, memory_data]])
+        self.prediction = self.aet_model.predict(self.data)
+        
+    def use_usages(self):
+        self.cpu_pre = self.prediction[0] - 2
+        self.ram_pre = self.prediction[1] - 2
+        
+    def warningWindow(self):
+        if self.cpu_pre > 3 or self.ram_pre > 12:
+            QMessageBox.warning(None, "Warning", "High resource usage detected!")
+        else:
+            return
+"""
 class WatchCPUUsage(QWidget):
     def __init__(self):
         super(WatchCPUUsage, self).__init__()
@@ -38,6 +61,7 @@ class WatchCPUUsage(QWidget):
         cpu_usage = psutil.cpu_percent(interval=1)
         self.cpu_progress.setValue(cpu_usage)
         self.cpu_label.setText(f"CPU Usage: {cpu_usage}%")
+        # self.AetherAI.warningWindow()
 
 class WatchRAMUsage(QWidget):
     def __init__(self):
@@ -81,9 +105,10 @@ class WatchRAMUsage(QWidget):
         available_memory = psutil.virtual_memory().available / (1024 ** 3)
         used_memory = psutil.virtual_memory().used / (1024 ** 3)
 
-        self.total_memory.setText(f"Total RAM Usage: {total_memory}%")
-        self.available_memory.setText(f"Available RAM Usage: {available_memory}%")
-        self.used_memory.setText(f"Used RAM Usage: {used_memory}%")
+        self.total_memory.setText(f"Total RAM Usage: {total_memory} GB")
+        self.available_memory.setText(f"Available RAM Usage: {available_memory} GB")
+        self.used_memory.setText(f"Used RAM Usage: {used_memory} GB")
+        # self.AetherAI.warningWindow()
 
 class AetAIApp(QWidget):
     def __init__(self):
@@ -130,11 +155,11 @@ class AetAIApp(QWidget):
         self.ram_window.show()
 
     def close_app(self):
-        pass
+        QApplication.quit()
 
-class SignInWindow(QWidget):
+class SignUpWindow(QWidget):
     def __init__(self, parent=None):
-        super(SignInWindow, self).__init__()
+        super(SignUpWindow, self).__init__()
         self.parent = parent
 
         self.setWindowTitle("Sign Up")
@@ -204,9 +229,9 @@ class SignInWindow(QWidget):
         else:
             QMessageBox.warning(self, "Error", "Email isn't exist. Please sign up first.")
 
-class SignUpWindow(QWidget):
+class SignInWindow(QWidget):
     def __init__(self, parent=None):
-        super(SignUpWindow, self).__init__()
+        super(SignInWindow, self).__init__()
         self.parent = parent
 
         self.setWindowTitle("Sign In")
@@ -287,7 +312,7 @@ class SignUpWindow(QWidget):
 
 class AetherAIApp(QMainWindow):
     def __init__(self):
-        super(AetAIApp, self).__init__()
+        super(AetherAIApp, self).__init__()
         self.setWindowTitle("AetherAI Application")
         self.setGeometry(100, 100, 800, 600)
         self.setToolTip("AetherAI Application")
@@ -332,7 +357,7 @@ class AetherAIApp(QMainWindow):
         self.main_app = AetAIApp()
         self.main_app.show()
         self.hide()
-
+"""
 def addUser():
     name = "Muhammet"
     lastname = "Kaya"
@@ -354,11 +379,11 @@ def addUser():
         users.append(user_infermation)
         userFile.seek(0)
         json.dump(users, userFile, indent=4)
-
+"""
 def start_app():
     app = QApplication(sys.argv)
     app.setApplicationName("AetherAI")
-    addUser()
+    # addUser()
     main_window = AetherAIApp()
     main_window.show()
     sys.exit(app.exec_())
