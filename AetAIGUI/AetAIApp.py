@@ -374,6 +374,7 @@ class AetherAIApp(QMainWindow):
         button_layout.addWidget(self.signup_button)
 
         layout.addLayout(button_layout)
+        self.central_widget.setLayout(layout)
 
     def signIn(self):
         self.signInWindow = SignInWindow()
