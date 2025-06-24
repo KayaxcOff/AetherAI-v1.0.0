@@ -9,13 +9,12 @@ import psutil
 import sys
 import json
 import os
-"""
 import joblib
 import numpy as np
 
 class AetherAI():
     def __init__(self):
-        self.cpu = psutil.cpu_percent(interval=1)
+        self.cpu = psutil.cpu_percent(interval=None)
         self.memory = psutil.virtual_memory().percent
         self.aet_model = joblib.load("AetherModel/Model/aether_ai.pkl")
 
@@ -23,22 +22,18 @@ class AetherAI():
         self.data = np.array([[cpu_data, memory_data]])
         self.prediction = self.aet_model.predict(self.data)
         
-    def use_usages(self):
-        self.cpu_pre = self.prediction[0] - 2
-        self.ram_pre = self.prediction[1] - 2
-        
-    def warningWindow(self):
-        if self.cpu_pre > 3 or self.ram_pre > 12:
-            QMessageBox.warning(None, "Warning", "High resource usage detected!")
-        else:
-            return
-"""
+    def systemUsage(self):
+        self.cpu_pre = self.prediction[0][0] - 2
+        self.ram_pre = self.prediction[0][1] - 2
+        return self.cpu_pre, self.ram_pre
+
 class WatchCPUUsage(QWidget):
     def __init__(self):
         super(WatchCPUUsage, self).__init__()
         self.setWindowTitle("CPU Usage")
         self.setGeometry(100, 100, 300, 200)
         self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        self.aether_ai = AetherAI()
         self.initUI()
 
     def initUI(self):
@@ -58,10 +53,15 @@ class WatchCPUUsage(QWidget):
         self.timer.start(1000)
 
     def update_cpu_usage(self):
-        cpu_usage = psutil.cpu_percent(interval=1)
+        cpu_usage = psutil.cpu_percent(interval=None)
+        ram_usage = psutil.virtual_memory().percent
         self.cpu_progress.setValue(cpu_usage)
         self.cpu_label.setText(f"CPU Usage: {cpu_usage}%")
-        # self.AetherAI.warningWindow()
+
+        self.aether_ai.predict(cpu_usage, ram_usage)
+        self.cpu_warning = self.aether_ai.systemUsage()[0]
+        if self.cpu_warning > 4:
+            QMessageBox.warning(self, "Warning", "CPU usage is high! Consider closing some applications.")
 
 class WatchRAMUsage(QWidget):
     def __init__(self):
@@ -69,6 +69,7 @@ class WatchRAMUsage(QWidget):
         self.setWindowTitle("RAM Usage")
         self.setGeometry(100, 100, 300, 200)
         self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        self.aether_ai = AetherAI()
         self.initUI()
 
     def initUI(self):
@@ -98,6 +99,7 @@ class WatchRAMUsage(QWidget):
 
     def update_ram_usage(self):
         ram_usage = psutil.virtual_memory().percent
+        cpu_usage = psutil.cpu_percent(interval=None)
         self.ram_progress.setValue(ram_usage)
         self.ram_label.setText(f"RAM Usage: {ram_usage}%")
 
@@ -108,7 +110,11 @@ class WatchRAMUsage(QWidget):
         self.total_memory.setText(f"Total RAM Usage: {total_memory} GB")
         self.available_memory.setText(f"Available RAM Usage: {available_memory} GB")
         self.used_memory.setText(f"Used RAM Usage: {used_memory} GB")
-        # self.AetherAI.warningWindow()
+
+        self.aether_ai.predict(cpu_usage, ram_usage)
+        self.memory_warning = self.aether_ai.systemUsage()[1]
+        if self.memory_warning > 11:
+            QMessageBox.warning(self, "Warning", "RAM usage is high! Consider closing some applications.")
 
 class AetAIApp(QWidget):
     def __init__(self):
@@ -200,34 +206,55 @@ class SignUpWindow(QWidget):
         email_layout.addWidget(self.email_input)
         layout.addLayout(email_layout)
 
-        self.signin_button = QPushButton("Sign in", self)
-        self.signin_button.setMaximumSize(150, 50)
-        self.signin_button.clicked.connect(self.handle_signin)
-        layout.addWidget(self.signin_button)
+        self.signup_button = QPushButton("Sign up", self)
+        self.signup_button.setMaximumSize(150, 50)
+        self.signup_button.clicked.connect(self.handle_signup)
+        layout.addWidget(self.signup_button)
 
         self.setLayout(layout)
 
-    def handle_signin(self):
+    def handle_signup(self):
+        name = self.name_input.text()
+        lastname = self.lastname_input.text()
         email = self.email_input.text()
-        if not email:
-            QMessageBox.warning(self, "Warning", "Please enter your email")
+
+        if not all([name, lastname, email]):
+            QMessageBox.warning(self, "Warning", "Please fill in all fields")
             return
 
-        found = False
-        if os.path.exists('users.json'):
-            with open('users.json', 'r') as userFile:
-                users = json.load(userFile)
-                for user in users:
-                    if user.get("email") == email:
-                        found = True
-                        break
-        if found:
-            QMessageBox.information(self, "Success", "Sign in successful!")
-            if self.parent:
-                self.parent.appMain()
+        if "@" not in email or "." not in email:
+            QMessageBox.warning(self, "Warning", "Please enter a valid email address")
+            return
+
+        filename = 'users.json'
+        user_information = {
+            "name": name,
+            "lastname": lastname,
+            "email": email
+        }
+
+        if not os.path.exists(filename):
+            with open(filename, 'w') as userFile:
+                json.dump([user_information], userFile, indent=4)
+            QMessageBox.information(self, "Success", "Sign up successful!")
             self.close()
-        else:
-            QMessageBox.warning(self, "Error", "Email isn't exist. Please sign up first.")
+            return
+
+        with open(filename, 'r+') as userFile:
+            try:
+                users = json.load(userFile)
+            except json.JSONDecodeError:
+                users = []
+            for user in users:
+                if user.get("email") == email:
+                    QMessageBox.warning(self, "Error", "This email is already registered!")
+                    return
+            users.append(user_information)
+            userFile.seek(0)
+            json.dump(users, userFile, indent=4)
+            userFile.truncate()
+            QMessageBox.information(self, "Success", "Sign up successful!")
+            self.close()
 
 class SignInWindow(QWidget):
     def __init__(self, parent=None):
@@ -272,14 +299,14 @@ class SignInWindow(QWidget):
         email_layout.addWidget(self.email_input)
         layout.addLayout(email_layout)
 
-        self.signup_button = QPushButton("Sign Up", self)
-        self.signup_button.setMaximumSize(150, 50)
-        self.signup_button.clicked.connect(self.handle_signup)
-        layout.addWidget(self.signup_button)
+        self.signin_button = QPushButton("Sign In", self)
+        self.signin_button.setMaximumSize(150, 50)
+        self.signin_button.clicked.connect(self.handle_signin)
+        layout.addWidget(self.signin_button)
 
         self.setLayout(layout)
 
-    def handle_signup(self):
+    def handle_signin(self):
         name = self.name_input.text()
         lastname = self.lastname_input.text()
         email = self.email_input.text()
@@ -292,23 +319,24 @@ class SignInWindow(QWidget):
             QMessageBox.warning(self, "Warning", "Please enter a valid email")
             return
 
-        bulundu = False
-        if os.path.exists('users.json'):
-            with open('users.json', 'r') as userFile:
-                users = json.load(userFile)
+        filename = 'users.json'
+        found = False
+        if os.path.exists(filename):
+            with open(filename, 'r') as userFile:
+                try:
+                    users = json.load(userFile)
+                except json.JSONDecodeError:
+                    users = []
                 for user in users:
                     if user.get("email") == email:
-                        bulundu = True
+                        found = True
                         break
-        if bulundu:
-            QMessageBox.warning(self, "Error", "Email already exists. Please sign in.")
-            return
 
-        if not os.path.exists('users.json'):
-            with open('users.json', 'w') as usersFile:
-                usersFile.write(f"{name}, {lastname}, {email}")
-                QMessageBox.information(None, "Success", "Sign in successful!")
-                self.close()
+        if found:
+            QMessageBox.information(self, "Success", "Sign in successful!")
+            self.close()
+        else:
+            QMessageBox.warning(self, "Error", "Email not found. Please sign up first.")
 
 class AetherAIApp(QMainWindow):
     def __init__(self):
@@ -345,45 +373,24 @@ class AetherAIApp(QMainWindow):
         self.signup_button.clicked.connect(self.signUp)
         button_layout.addWidget(self.signup_button)
 
+        layout.addLayout(button_layout)
+
     def signIn(self):
-        self.signInWindow = SignUpWindow()
+        self.signInWindow = SignInWindow()
         self.signInWindow.show()
 
     def signUp(self):
-        self.signUpWindow = SignInWindow()
+        self.signUpWindow = SignUpWindow()
         self.signUpWindow.show()
 
     def appMain(self):
         self.main_app = AetAIApp()
         self.main_app.show()
         self.hide()
-"""
-def addUser():
-    name = "Muhammet"
-    lastname = "Kaya"
-    email = "muham123cak@gmail.com"
 
-    user_infermation = {
-        "name": name,
-        "lastname": lastname,
-        "email": email
-    }
-
-    if not os.path.exists('users.json'):
-        with open('users.json', 'w') as userFile:
-            json.dump(user_infermation, userFile, indent=4)
-        return
-
-    with open('users.json', 'r+') as userFile:
-        users = json.load(userFile)
-        users.append(user_infermation)
-        userFile.seek(0)
-        json.dump(users, userFile, indent=4)
-"""
 def start_app():
     app = QApplication(sys.argv)
     app.setApplicationName("AetherAI")
-    # addUser()
     main_window = AetherAIApp()
     main_window.show()
     sys.exit(app.exec_())
