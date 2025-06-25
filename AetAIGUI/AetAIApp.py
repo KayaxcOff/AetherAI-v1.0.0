@@ -12,27 +12,40 @@ import os
 import joblib
 import numpy as np
 
+
 class AetherAI():
     def __init__(self):
         self.cpu = psutil.cpu_percent(interval=None)
         self.memory = psutil.virtual_memory().percent
-        self.aet_model = joblib.load("../Model/aether_ai.pkl")
+        try:
+            self.aet_model = joblib.load("../Model/aether_ai.pkl")
+        except FileNotFoundError:
+            print("Warning: Model file not found. Creating dummy model.")
+            self.aet_model = None
 
     def predict(self, cpu_data, memory_data):
-        self.data = np.array([[cpu_data, memory_data]])
-        self.prediction = self.aet_model.predict(self.data)
-        
+        if self.aet_model is not None:
+            self.data = np.array([[cpu_data, memory_data]])
+            self.prediction = self.aet_model.predict(self.data)
+        else:
+            # Dummy prediction if model is not available
+            self.prediction = [[cpu_data + 1, memory_data + 1]]
+
     def systemUsage(self):
         self.cpu_pre = self.prediction[0][0] - 2
         self.ram_pre = self.prediction[0][1] - 2
         return self.cpu_pre, self.ram_pre
+
 
 class WatchCPUUsage(QWidget):
     def __init__(self):
         super(WatchCPUUsage, self).__init__()
         self.setWindowTitle("CPU Usage")
         self.setGeometry(100, 100, 300, 200)
-        self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        try:
+            self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        except:
+            pass  # Icon file not found, continue without icon
         self.aether_ai = AetherAI()
         self.initUI()
 
@@ -55,7 +68,7 @@ class WatchCPUUsage(QWidget):
     def update_cpu_usage(self):
         cpu_usage = psutil.cpu_percent(interval=None)
         ram_usage = psutil.virtual_memory().percent
-        self.cpu_progress.setValue(cpu_usage)
+        self.cpu_progress.setValue(int(cpu_usage))
         self.cpu_label.setText(f"CPU Usage: {cpu_usage}%")
 
         self.aether_ai.predict(cpu_usage, ram_usage)
@@ -63,12 +76,16 @@ class WatchCPUUsage(QWidget):
         if self.cpu_warning > 4:
             QMessageBox.warning(self, "Warning", "CPU usage is high! Consider closing some applications.")
 
+
 class WatchRAMUsage(QWidget):
     def __init__(self):
         super(WatchRAMUsage, self).__init__()
         self.setWindowTitle("RAM Usage")
         self.setGeometry(100, 100, 300, 200)
-        self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        try:
+            self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        except:
+            pass  # Icon file not found, continue without icon
         self.aether_ai = AetherAI()
         self.initUI()
 
@@ -100,28 +117,32 @@ class WatchRAMUsage(QWidget):
     def update_ram_usage(self):
         ram_usage = psutil.virtual_memory().percent
         cpu_usage = psutil.cpu_percent(interval=None)
-        self.ram_progress.setValue(ram_usage)
+        self.ram_progress.setValue(int(ram_usage))
         self.ram_label.setText(f"RAM Usage: {ram_usage}%")
 
         total_memory = psutil.virtual_memory().total / (1024 ** 3)
         available_memory = psutil.virtual_memory().available / (1024 ** 3)
         used_memory = psutil.virtual_memory().used / (1024 ** 3)
 
-        self.total_memory.setText(f"Total RAM Usage: {total_memory} GB")
-        self.available_memory.setText(f"Available RAM Usage: {available_memory} GB")
-        self.used_memory.setText(f"Used RAM Usage: {used_memory} GB")
+        self.total_memory.setText(f"Total RAM Usage: {total_memory:.2f} GB")
+        self.available_memory.setText(f"Available RAM Usage: {available_memory:.2f} GB")
+        self.used_memory.setText(f"Used RAM Usage: {used_memory:.2f} GB")
 
         self.aether_ai.predict(cpu_usage, ram_usage)
         self.memory_warning = self.aether_ai.systemUsage()[1]
         if self.memory_warning > 11:
             QMessageBox.warning(self, "Warning", "RAM usage is high! Consider closing some applications.")
 
+
 class AetAIApp(QWidget):
     def __init__(self):
         super(AetAIApp, self).__init__()
         self.setWindowTitle("AetherAI Application")
         self.setGeometry(100, 100, 800, 600)
-        self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        try:
+            self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        except:
+            pass  # Icon file not found, continue without icon
         self.initUI()
 
     def initUI(self):
@@ -147,21 +168,27 @@ class AetAIApp(QWidget):
         self.exit_button.clicked.connect(self.close_app)
         button_layout.addWidget(self.exit_button)
 
+        layout.addLayout(button_layout)
         self.setLayout(layout)
 
         self.cpu_window = None
         self.ram_window = None
 
     def show_cpu_usage(self):
+        if self.cpu_window is not None:
+            self.cpu_window.close()
         self.cpu_window = WatchCPUUsage()
         self.cpu_window.show()
 
     def show_ram_usage(self):
+        if self.ram_window is not None:
+            self.ram_window.close()
         self.ram_window = WatchRAMUsage()
         self.ram_window.show()
 
     def close_app(self):
         QApplication.quit()
+
 
 class SignUpWindow(QWidget):
     def __init__(self, parent=None):
@@ -170,7 +197,10 @@ class SignUpWindow(QWidget):
 
         self.setWindowTitle("Sign Up")
         self.setGeometry(100, 100, 400, 300)
-        self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        try:
+            self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        except:
+            pass  # Icon file not found, continue without icon
         self.initUI()
 
     def initUI(self):
@@ -214,9 +244,9 @@ class SignUpWindow(QWidget):
         self.setLayout(layout)
 
     def handle_signup(self):
-        name = self.name_input.text()
-        lastname = self.lastname_input.text()
-        email = self.email_input.text()
+        name = self.name_input.text().strip()
+        lastname = self.lastname_input.text().strip()
+        email = self.email_input.text().strip()
 
         if not all([name, lastname, email]):
             QMessageBox.warning(self, "Warning", "Please fill in all fields")
@@ -233,28 +263,39 @@ class SignUpWindow(QWidget):
             "email": email
         }
 
-        if not os.path.exists(filename):
-            with open(filename, 'w') as userFile:
-                json.dump([user_information], userFile, indent=4)
-            QMessageBox.information(self, "Success", "Sign up successful!")
-            self.close()
-            return
+        try:
+            if not os.path.exists(filename):
+                with open(filename, 'w') as userFile:
+                    json.dump([user_information], userFile, indent=4)
+                QMessageBox.information(self, "Success", "Sign up successful!")
+                self.close()
+                return
 
-        with open(filename, 'r+') as userFile:
-            try:
-                users = json.load(userFile)
-            except json.JSONDecodeError:
-                users = []
+            with open(filename, 'r') as userFile:
+                try:
+                    users = json.load(userFile)
+                    if not isinstance(users, list):
+                        users = []
+                except json.JSONDecodeError:
+                    users = []
+
+            # Check if email already exists
             for user in users:
-                if user.get("email") == email:
+                if isinstance(user, dict) and user.get("email") == email:
                     QMessageBox.warning(self, "Error", "This email is already registered!")
                     return
+
             users.append(user_information)
-            userFile.seek(0)
-            json.dump(users, userFile, indent=4)
-            userFile.truncate()
+
+            with open(filename, 'w') as userFile:
+                json.dump(users, userFile, indent=4)
+
             QMessageBox.information(self, "Success", "Sign up successful!")
             self.close()
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+
 
 class SignInWindow(QWidget):
     def __init__(self, parent=None):
@@ -263,7 +304,10 @@ class SignInWindow(QWidget):
 
         self.setWindowTitle("Sign In")
         self.setGeometry(100, 100, 400, 300)
-        self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        try:
+            self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        except:
+            pass  # Icon file not found, continue without icon
         self.initUI()
 
     def initUI(self):
@@ -307,9 +351,9 @@ class SignInWindow(QWidget):
         self.setLayout(layout)
 
     def handle_signin(self):
-        name = self.name_input.text()
-        lastname = self.lastname_input.text()
-        email = self.email_input.text()
+        name = self.name_input.text().strip()
+        lastname = self.lastname_input.text().strip()
+        email = self.email_input.text().strip()
 
         if not all([name, lastname, email]):
             QMessageBox.warning(self, "Warning", "Please fill in all fields")
@@ -321,24 +365,47 @@ class SignInWindow(QWidget):
 
         filename = 'users.json'
         found = False
-        if os.path.exists(filename):
-            with open(filename, 'r') as userFile:
-                try:
-                    users = json.load(userFile)
-                except json.JSONDecodeError:
-                    users = []
-                for user in users:
-                    if user.get("email") == email:
-                        found = True
-                        break
 
-        if found:
-            QMessageBox.information(self, "Success", "Sign in successful!")
-            if self.parent:
-                self.parent.show()
-            self.close()
-        else:
-            QMessageBox.warning(self, "Error", "Email not found. Please sign up first.")
+        try:
+            if os.path.exists(filename):
+                with open(filename, 'r') as userFile:
+                    try:
+                        users = json.load(userFile)
+                        if not isinstance(users, list):
+                            users = []
+                    except json.JSONDecodeError:
+                        users = []
+
+                    for user in users:
+                        # Check if user is a dictionary and has the required fields
+                        if isinstance(user, dict):
+                            user_email = user.get("email", "")
+                            user_name = user.get("name", "")
+                            user_lastname = user.get("lastname", "")
+
+                            if (user_email == email and
+                                    user_name == name and
+                                    user_lastname == lastname):
+                                found = True
+                                break
+
+            if found:
+                QMessageBox.information(self, "Success", "Sign in successful!")
+                # Create and show the main application
+                self.main_app = AetAIApp()
+                self.main_app.show()
+                # Close the sign-in window
+                self.close()
+                # Hide the parent window if it exists
+                if self.parent:
+                    self.parent.hide()
+            else:
+                QMessageBox.warning(self, "Error",
+                                    "Invalid credentials. Please check your information or sign up first.")
+
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"An error occurred: {str(e)}")
+
 
 class AetherAIApp(QMainWindow):
     def __init__(self):
@@ -346,7 +413,10 @@ class AetherAIApp(QMainWindow):
         self.setWindowTitle("AetherAI Application")
         self.setGeometry(100, 100, 800, 600)
         self.setToolTip("AetherAI Application")
-        self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        try:
+            self.setWindowIcon(QIcon("AetPictures/logo.png"))
+        except:
+            pass  # Icon file not found, continue without icon
         self.initUI()
 
     def initUI(self):
@@ -365,13 +435,19 @@ class AetherAIApp(QMainWindow):
 
         self.signin_button = QPushButton("Sign in", self.central_widget)
         self.signin_button.setMinimumSize(150, 50)
-        self.signin_button.setIcon(QIcon("AetPictures/signin.png"))
+        try:
+            self.signin_button.setIcon(QIcon("AetPictures/signin.png"))
+        except:
+            pass  # Icon file not found, continue without icon
         self.signin_button.clicked.connect(self.signIn)
         button_layout.addWidget(self.signin_button)
 
         self.signup_button = QPushButton("Sign Up", self.central_widget)
         self.signup_button.setMinimumSize(150, 50)
-        self.signup_button.setIcon(QIcon("AetPictures/signup.png"))
+        try:
+            self.signup_button.setIcon(QIcon("AetPictures/signup.png"))
+        except:
+            pass  # Icon file not found, continue without icon
         self.signup_button.clicked.connect(self.signUp)
         button_layout.addWidget(self.signup_button)
 
@@ -379,31 +455,32 @@ class AetherAIApp(QMainWindow):
         self.central_widget.setLayout(layout)
 
     def signIn(self):
-        self.hide() #
-        self.signInWindow = SignInWindow()
+        self.signInWindow = SignInWindow(parent=self)
         self.signInWindow.show()
 
     def signUp(self):
-        self.hide() #
-        self.signUpWindow = SignUpWindow()
+        self.signUpWindow = SignUpWindow(parent=self)
         self.signUpWindow.show()
 
-    def appMain(self):
-        self.main_app = AetAIApp()
-        self.main_app.show()
-        self.hide()
 
 def start_app():
     app = QApplication(sys.argv)
     app.setApplicationName("AetherAI")
-    font_id = QFontDatabase.addApplicationFont("FontFile/GHORAtrial.ttf")
-    if font_id == -1:
-        print("Font not found")
-    else:
-        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
-        app.setFont(QFont(font_family, 12))
+
+    try:
+        font_id = QFontDatabase.addApplicationFont("FontFile/GHORAtrial.ttf")
+        if font_id != -1:
+            font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+            app.setFont(QFont(font_family, 12))
+        else:
+            print("Font not found, using default font")
+    except:
+        print("Font file not found, using default font")
+
     main_window = AetherAIApp()
     main_window.show()
     sys.exit(app.exec_())
 
-start_app()
+
+if __name__ == "__main__":
+    start_app()
