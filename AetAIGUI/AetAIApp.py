@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QLineEdit, QPushButton, QWidget,
     QVBoxLayout, QProgressBar, QHBoxLayout, QMessageBox
 )
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon, QFontDatabase, QFont
 from PyQt5.QtCore import QTimer
 import psutil
 import sys
@@ -16,7 +16,7 @@ class AetherAI():
     def __init__(self):
         self.cpu = psutil.cpu_percent(interval=None)
         self.memory = psutil.virtual_memory().percent
-        self.aet_model = joblib.load("AetherModel/Model/aether_ai.pkl")
+        self.aet_model = joblib.load("../Model/aether_ai.pkl")
 
     def predict(self, cpu_data, memory_data):
         self.data = np.array([[cpu_data, memory_data]])
@@ -392,6 +392,12 @@ class AetherAIApp(QMainWindow):
 def start_app():
     app = QApplication(sys.argv)
     app.setApplicationName("AetherAI")
+    font_id = QFontDatabase.addApplicationFont("FontFile/GHORAtrial.ttf")
+    if font_id == -1:
+        print("Font not found")
+    else:
+        font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
+        app.setFont(QFont(font_family, 12))
     main_window = AetherAIApp()
     main_window.show()
     sys.exit(app.exec_())
