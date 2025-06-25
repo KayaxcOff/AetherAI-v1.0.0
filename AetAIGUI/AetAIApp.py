@@ -334,6 +334,8 @@ class SignInWindow(QWidget):
 
         if found:
             QMessageBox.information(self, "Success", "Sign in successful!")
+            if self.parent:
+                self.parent.show()
             self.close()
         else:
             QMessageBox.warning(self, "Error", "Email not found. Please sign up first.")
@@ -377,10 +379,12 @@ class AetherAIApp(QMainWindow):
         self.central_widget.setLayout(layout)
 
     def signIn(self):
+        self.hide() #
         self.signInWindow = SignInWindow()
         self.signInWindow.show()
 
     def signUp(self):
+        self.hide() #
         self.signUpWindow = SignUpWindow()
         self.signUpWindow.show()
 
