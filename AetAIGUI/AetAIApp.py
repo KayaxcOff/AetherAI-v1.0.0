@@ -28,7 +28,6 @@ class AetherAI():
             self.data = np.array([[cpu_data, memory_data]])
             self.prediction = self.aet_model.predict(self.data)
         else:
-            # Dummy prediction if model is not available
             self.prediction = [[cpu_data + 1, memory_data + 1]]
 
     def systemUsage(self):
@@ -45,9 +44,10 @@ class WatchCPUUsage(QWidget):
         try:
             self.setWindowIcon(QIcon("AetPictures/logo.png"))
         except:
-            pass  # Icon file not found, continue without icon
+            pass
         self.aether_ai = AetherAI()
         self.initUI()
+        self.cpu_warning_shown = False #
 
     def initUI(self):
         layout = QVBoxLayout()
@@ -73,9 +73,9 @@ class WatchCPUUsage(QWidget):
 
         self.aether_ai.predict(cpu_usage, ram_usage)
         self.cpu_warning = self.aether_ai.systemUsage()[0]
-        if self.cpu_warning > 4:
+        if self.cpu_warning > 4 and not self.cpu_warning_shown:
             QMessageBox.warning(self, "Warning", "CPU usage is high! Consider closing some applications.")
-
+            self.cpu_warning_shown = True #
 
 class WatchRAMUsage(QWidget):
     def __init__(self):
@@ -85,9 +85,10 @@ class WatchRAMUsage(QWidget):
         try:
             self.setWindowIcon(QIcon("AetPictures/logo.png"))
         except:
-            pass  # Icon file not found, continue without icon
+            pass
         self.aether_ai = AetherAI()
         self.initUI()
+        self.memory_warning_shown = False #
 
     def initUI(self):
         layout = QVBoxLayout()
@@ -130,9 +131,9 @@ class WatchRAMUsage(QWidget):
 
         self.aether_ai.predict(cpu_usage, ram_usage)
         self.memory_warning = self.aether_ai.systemUsage()[1]
-        if self.memory_warning > 11:
+        if self.memory_warning > 11 and not self.memory_warning_shown:
             QMessageBox.warning(self, "Warning", "RAM usage is high! Consider closing some applications.")
-
+            self.memory_warning_shown = True #
 
 class AetAIApp(QWidget):
     def __init__(self):
@@ -142,7 +143,7 @@ class AetAIApp(QWidget):
         try:
             self.setWindowIcon(QIcon("AetPictures/logo.png"))
         except:
-            pass  # Icon file not found, continue without icon
+            pass
         self.initUI()
 
     def initUI(self):
@@ -200,7 +201,7 @@ class SignUpWindow(QWidget):
         try:
             self.setWindowIcon(QIcon("AetPictures/logo.png"))
         except:
-            pass  # Icon file not found, continue without icon
+            pass
         self.initUI()
 
     def initUI(self):
@@ -307,7 +308,7 @@ class SignInWindow(QWidget):
         try:
             self.setWindowIcon(QIcon("AetPictures/logo.png"))
         except:
-            pass  # Icon file not found, continue without icon
+            pass
         self.initUI()
 
     def initUI(self):
@@ -377,7 +378,6 @@ class SignInWindow(QWidget):
                         users = []
 
                     for user in users:
-                        # Check if user is a dictionary and has the required fields
                         if isinstance(user, dict):
                             user_email = user.get("email", "")
                             user_name = user.get("name", "")
@@ -391,12 +391,9 @@ class SignInWindow(QWidget):
 
             if found:
                 QMessageBox.information(self, "Success", "Sign in successful!")
-                # Create and show the main application
                 self.main_app = AetAIApp()
                 self.main_app.show()
-                # Close the sign-in window
                 self.close()
-                # Hide the parent window if it exists
                 if self.parent:
                     self.parent.hide()
             else:
@@ -416,7 +413,7 @@ class AetherAIApp(QMainWindow):
         try:
             self.setWindowIcon(QIcon("AetPictures/logo.png"))
         except:
-            pass  # Icon file not found, continue without icon
+            pass
         self.initUI()
 
     def initUI(self):
@@ -468,7 +465,7 @@ def start_app():
     app.setApplicationName("AetherAI")
 
     try:
-        font_id = QFontDatabase.addApplicationFont("FontFile/GHORAtrial.ttf")
+        font_id = QFontDatabase.addApplicationFont("FontFile/WDXLLubrifontSC-Regular.ttf")
         if font_id != -1:
             font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
             app.setFont(QFont(font_family, 12))
