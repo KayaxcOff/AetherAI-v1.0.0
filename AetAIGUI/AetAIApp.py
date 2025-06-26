@@ -12,7 +12,6 @@ import os
 import joblib
 import numpy as np
 
-
 class AetherAI():
     def __init__(self):
         self.cpu = psutil.cpu_percent(interval=None)
@@ -280,7 +279,6 @@ class SignUpWindow(QWidget):
                 except json.JSONDecodeError:
                     users = []
 
-            # Check if email already exists
             for user in users:
                 if isinstance(user, dict) and user.get("email") == email:
                     QMessageBox.warning(self, "Error", "This email is already registered!")
@@ -462,6 +460,10 @@ class AetherAIApp(QMainWindow):
 
 def start_app():
     app = QApplication(sys.argv)
+
+    with open('AetAIApp.qss', 'r') as file:
+        app.setStyleSheet(file.read())
+
     app.setApplicationName("AetherAI")
 
     try:
