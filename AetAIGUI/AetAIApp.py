@@ -17,21 +17,21 @@ class AetherAI():
         self.cpu = psutil.cpu_percent(interval=None)
         self.memory = psutil.virtual_memory().percent
         try:
-            self.aet_model = joblib.load("../Model/aether_ai.pkl")
+            self.aet_model = joblib.load("../AetherModel/Model/aether_ai.pkl")
         except FileNotFoundError:
             print("Warning: Model file not found. Creating dummy model.")
             self.aet_model = None
 
-    def predict(self, cpu_data, memory_data):
+    def predict(self, cpu_data, cpu_load, memory_data, memory_load):
         if self.aet_model is not None:
-            self.data = np.array([[cpu_data, memory_data]])
+            self.data = np.array([[cpu_data, cpu_load, memory_data, memory_load]])
             self.prediction = self.aet_model.predict(self.data)
         else:
             self.prediction = [[cpu_data + 1, memory_data + 1]]
 
     def systemUsage(self):
         self.cpu_pre = self.prediction[0][0] - 2
-        self.ram_pre = self.prediction[0][1] - 2
+        self.ram_pre = self.prediction[0][1] + 2
         return self.cpu_pre, self.ram_pre
 
 
@@ -66,11 +66,20 @@ class WatchCPUUsage(QWidget):
 
     def update_cpu_usage(self):
         cpu_usage = psutil.cpu_percent(interval=None)
-        ram_usage = psutil.virtual_memory().percent
+        # ram_usage = psutil.virtual_memory().percent
         self.cpu_progress.setValue(int(cpu_usage))
         self.cpu_label.setText(f"CPU Usage: {cpu_usage}%")
 
-        self.aether_ai.predict(cpu_usage, ram_usage)
+        if 0 <= cpu_usage <= 30:
+            cpu_load = 0
+        elif 31 <= cpu_usage <= 70:
+            cpu_load = 1
+        elif 71 <= cpu_usage <= 100:
+            cpu_load = 2
+        else:
+            QMessageBox.warning(self, "Warning", "Model can't work")
+
+        self.aether_ai.predict(cpu_usage, cpu_load, 0, 0)
         self.cpu_warning = self.aether_ai.systemUsage()[0]
         if self.cpu_warning > 4 and not self.cpu_warning_shown:
             QMessageBox.warning(self, "Warning", "CPU usage is high! Consider closing some applications.")
@@ -128,7 +137,16 @@ class WatchRAMUsage(QWidget):
         self.available_memory.setText(f"Available RAM Usage: {available_memory:.2f} GB")
         self.used_memory.setText(f"Used RAM Usage: {used_memory:.2f} GB")
 
-        self.aether_ai.predict(cpu_usage, ram_usage)
+        if 0 <= ram_usage <= 50:
+            ram_load = 3
+        elif 51 <= ram_usage <= 80:
+            ram_load = 4
+        elif 81 <= ram_usage <= 100:
+            ram_load = 5
+        else:
+            QMessageBox.warning(self, "Warning", "Model can't work")
+
+        self.aether_ai.predict(0, 0, ram_usage, ram_load)
         self.memory_warning = self.aether_ai.systemUsage()[1]
         if self.memory_warning > 11 and not self.memory_warning_shown:
             QMessageBox.warning(self, "Warning", "RAM usage is high! Consider closing some applications.")
