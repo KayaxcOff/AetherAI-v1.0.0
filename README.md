@@ -13,7 +13,7 @@ AetherAI is an advanced artificial intelligence platform designed to deliver pow
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/AetherAI.git
+git clone https://github.com/yourusername/AetherAI-v1.0.0.git
 cd AetherAI
 pip install -r requirements.txt
 ```
