@@ -1,21 +1,21 @@
 QWidget {
-    background-color: #b3e0ff;
-    color: #fffde4;
+    background-color: #1565c0;
+    color: #f5e9c8;
     font-family: Arial;
     font-size: 16px;
 }
 
 QLabel {
-    color: #fffde6;
+    color: #f5e9c8;
     font-size: 20px;
 }
 
 QPushButton {
-    background-color: #4fc3f7;
-    color: #fffde6;
+    background-color: #43a047;
+    color: #fffde4;
     border: none;
-    border-radius: 8px;
-    padding: 10px 20px;
+    border-radius: 10px;
+    padding: 16px 32px;
     font-weight: bold;
     transition: background-color 0.3s;
 }

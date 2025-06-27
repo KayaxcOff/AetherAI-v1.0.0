@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout, QProgressBar, QHBoxLayout, QMessageBox
 )
 from PyQt5.QtGui import QIcon, QFontDatabase, QFont
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer, Qt
 import psutil
 import sys
 import json
@@ -83,7 +83,7 @@ class WatchCPUUsage(QWidget):
         self.cpu_warning = self.aether_ai.systemUsage()[0]
         if self.cpu_warning > 4 and not self.cpu_warning_shown:
             QMessageBox.warning(self, "Warning", "CPU usage is high! Consider closing some applications.")
-            self.cpu_warning_shown = True #
+            self.cpu_warning_shown = True
 
 class WatchRAMUsage(QWidget):
     def __init__(self):
@@ -125,7 +125,7 @@ class WatchRAMUsage(QWidget):
 
     def update_ram_usage(self):
         ram_usage = psutil.virtual_memory().percent
-        cpu_usage = psutil.cpu_percent(interval=None)
+        #cpu_usage = psutil.cpu_percent(interval=None)
         self.ram_progress.setValue(int(ram_usage))
         self.ram_label.setText(f"RAM Usage: {ram_usage}%")
 
@@ -321,6 +321,7 @@ class SignInWindow(QWidget):
 
         self.setWindowTitle("Sign In")
         self.setGeometry(100, 100, 400, 300)
+        self.setWindowFlags(Qt.FramelessWindowHint) #
         try:
             self.setWindowIcon(QIcon("AetPictures/logo.png"))
         except:
